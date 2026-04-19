@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/* Apple Juice — handwritten annotation font */
+@font-face {
+  font-family: 'Apple Juice';
+  src: url('/fonts/Apple%20Juice%20Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-verde: #2D482A;
+  --color-rojo: #DF362A;
+  --color-lima: #CCCC73;
+  --color-tierra: #3C3026;
+  --color-lino: #f2ebe2;
+  --color-celeste: #AEC3D1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--color-lino);
+  color: var(--color-tierra);
+  min-height: 100vh;
+}
+
+/* Organic cursor — hide system cursor globally, restore text cursor for inputs */
+html.cursor-organic * { cursor: none !important; }
+html.cursor-organic input,
+html.cursor-organic textarea,
+html.cursor-organic select { cursor: text !important; }
+
+/* Canvas breathing — almost imperceptible scale pulse, 6s cycle */
+@keyframes canvas-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.004); }
+}
+.canvas-breathe {
+  animation: canvas-breathe 6s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* Grain texture — two fixed layers: medium + warm-coarse, together ~8% perceived. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.045;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.60' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: soft-light;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* === Global interactive base === */
+button {
+  cursor: pointer;
+}
+
+/* === Button system — flat, solid, no gradient, no shadow, no border ===
+   Active states = tierra or lima solid fill.
+   Inactive = #e4dace (step-down lino), defined by color mass alone. */
+
+/* Primary — tierra solid, lino text */
+.btn-primary {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  border-radius: 3px;
+  transition: background 150ms ease, color 150ms ease, transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-primary:not(:disabled):hover {
+  background: #4e3c2e;
+  color: var(--color-lino);
+  transform: translateY(-1px);
+}
+.btn-primary:not(:disabled):active {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  transform: translateY(0);
+  transition: none;
+}
+
+/* Secondary — step-down lino solid, tierra text */
+.btn-secondary {
+  background: #e4dace;
+  color: var(--color-tierra);
+  border-radius: 3px;
+  transition: background 150ms ease, color 150ms ease, transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-secondary:not(:disabled):hover {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  transform: translateY(-1px);
+}
+
+/* Export — SVG secondary (light), PDF primary (verde) */
+.btn-export-secondary {
+  background: #e4dace;
+  color: var(--color-tierra);
+}
+.btn-export-secondary:not(:disabled):hover {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+}
+.btn-export-secondary:not(:disabled):active {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  transition: none;
+}
+.btn-export-primary {
+  background: var(--color-verde);
+  color: var(--color-lino);
+}
+.btn-export-primary:not(:disabled):hover {
+  background: #1e3219;
+  color: var(--color-lino);
+}
+.btn-export-primary:not(:disabled):active {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  transition: none;
+}
+.btn-secondary:not(:disabled):active {
+  background: var(--color-tierra);
+  color: var(--color-lino);
+  transition: none;
+}
+
+/* Shape selector — active: lima bottom border, lima stroke icon */
+.btn-shape-active {
+  background: transparent;
+  color: var(--color-lima);
+  border-radius: 0;
+  border-bottom: 2px solid var(--color-lima);
+  transition: background 150ms ease, color 150ms ease, transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-shape-active:hover {
+  background: rgba(204, 204, 115, 0.07);
+  transform: translateY(-2px);
+}
+
+/* Shape selector — inactive: subtle tierra border, dim fill icon (Opción C) */
+.btn-shape-inactive {
+  background: transparent;
+  color: rgba(60, 48, 38, 0.22);
+  border-radius: 0;
+  border-bottom: 1px solid rgba(60, 48, 38, 0.14);
+  transition: background 150ms ease, color 180ms ease, transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-shape-inactive:hover {
+  background: rgba(60, 48, 38, 0.04);
+  color: rgba(60, 48, 38, 0.55);
+  transform: translateY(-2px);
+}
+.btn-shape-inactive:active {
+  background: transparent;
+  color: var(--color-tierra);
+  transform: translateY(0);
+  transition: none;
+}
+
+/* Language button — on verde header */
+.btn-lang {
+  background: transparent;
+  color: var(--color-lino);
+  border-radius: 3px;
+  transition: color 150ms ease;
+}
+.btn-lang:hover {
+  color: var(--color-rojo);
+}
+
+/* Info panel toggle — rojo as base color */
+.btn-info {
+  color: var(--color-rojo);
+  transition: color 150ms ease;
+}
+.btn-info:hover {
+  color: #b82015;
+}
+
+/* Header grain — texture on verde background */
+.grain-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Vignette — subtle inward shadow on the main canvas area */
+.vignette-main {
+  box-shadow: inset 0 0 60px rgba(60, 48, 38, 0.08);
+}
