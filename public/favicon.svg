@@ -1,7 +1,8 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g clip-path="url(#clip0_865_2)">
+<rect width="64" height="64" fill="white"/>
 <rect x="-12" y="-1" width="93" height="66" fill="url(#pattern0_865_2)"/>
-<path d="M7.936 48.496H11.932V23.872H7.936V23.368H16.036L22.696 42.736H22.768L29.428 23.368H37.384V23.872H33.388V48.496H37.384V49H25.792V48.496H29.788V24.088H29.716L21.112 49.036L12.544 24.34H12.472V48.496H16.468V49H7.936V48.496Z" fill="#3F2A0A"/>
+<path d="M8.224 23.368H17.476L23.704 41.296H23.776L30.112 23.368H39.112V23.872H35.8V48.496H39.112V49H27.304V48.496H30.58V23.872H30.508L21.652 49H21.076L12.184 23.872H12.112V48.496H15.424V49H8.224V48.496H11.536V23.872H8.224V23.368Z" fill="#3F2A0A"/>
 </g>
 <defs>
 <pattern id="pattern0_865_2" patternContentUnits="objectBoundingBox" width="1" height="1">
