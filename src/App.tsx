@@ -78,6 +78,13 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
   const { t } = useTranslation();
   const { state, dispatch } = useAppState();
   const [activeTab, setActiveTab] = useState<MobileTab | null>(null);
+  const [expanded3D, setExpanded3D] = useState(false);
+
+  const totalMm = state.stack.reduce((sum, item) => {
+    const h = parseFloat(item.inputs.height ?? '0') || 0;
+    return sum + (state.unit === 'cm' ? h * 10 : h);
+  }, 0);
+  const limitReached = totalMm >= 500;
 
   const toggleTab = (tab: MobileTab) =>
     setActiveTab(prev => (prev === tab ? null : tab));
@@ -202,8 +209,8 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
         </button>
       </header>
 
-      {/* Canvas — fills all remaining space; paddingBottom reserves room for fixed tab bar */}
-      <main style={{ flex: 1, minHeight: 0, display: 'flex', padding: 12, paddingBottom: 64, background: 'var(--color-celeste)' }}>
+      {/* Canvas — fills all remaining space; paddingBottom reserves room for fixed tab bar + safe area */}
+      <main style={{ flex: 1, minHeight: 0, display: 'flex', padding: 12, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))', background: 'var(--color-celeste)' }}>
         <PatternCanvas pattern={pattern} tiling={layout} />
       </main>
 
@@ -226,7 +233,7 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
       <div
         style={{
           position: 'fixed',
-          bottom: 52,
+          bottom: 'calc(52px + env(safe-area-inset-bottom))',
           left: 0,
           right: 0,
           maxHeight: '72vh',
@@ -291,7 +298,23 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
           {activeTab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <InfoPanel pattern={pattern} />
-              <Preview3D />
+
+              {/* Tappable 3D preview — tap to expand fullscreen */}
+              <div
+                onClick={() => setExpanded3D(true)}
+                style={{ position: 'relative', height: 200, borderRadius: 6, overflow: 'hidden', cursor: 'pointer' }}
+              >
+                <Preview3D />
+                <div style={{
+                  position: 'absolute', bottom: 8, right: 8,
+                  background: 'rgba(242,235,226,0.82)', backdropFilter: 'blur(4px)',
+                  borderRadius: 3, padding: '3px 7px',
+                  fontFamily: "'Apple Juice', cursive", fontSize: 9, letterSpacing: '0.16em',
+                  color: 'rgba(60,48,38,0.55)', pointerEvents: 'none',
+                }}>
+                  expandir
+                </div>
+              </div>
               {/* Stack navigation chips — tap to switch active piece */}
               {state.stack.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 4 }}>
@@ -347,7 +370,8 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
           bottom: 0,
           left: 0,
           right: 0,
-          height: 52,
+          height: 'calc(52px + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
           background: '#F4EDE1',
           borderTop: '1px solid rgba(60,48,38,0.12)',
           display: 'flex',
@@ -399,26 +423,30 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
         <div style={{ width: 64, flexShrink: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 2 }}>
           <button
             onClick={() => {
+              if (limitReached) return;
               dispatch({ type: 'ADD_STACK_ITEM' });
               setActiveTab('forma');
             }}
+            disabled={limitReached}
+            title={limitReached ? t('stack.limitReached') : t('stack.add')}
             style={{
               width: 44,
               height: 44,
               borderRadius: '50%',
-              background: 'var(--color-celeste)',
+              background: limitReached ? 'rgba(60,48,38,0.12)' : 'var(--color-celeste)',
               border: '3px solid #F4EDE1',
-              cursor: 'pointer',
+              cursor: limitReached ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-rojo)',
-              boxShadow: '0 2px 10px rgba(45,72,42,0.28)',
+              color: limitReached ? 'rgba(60,48,38,0.3)' : 'var(--color-rojo)',
+              boxShadow: limitReached ? 'none' : '0 2px 10px rgba(45,72,42,0.28)',
               transform: 'translateY(-10px)',
-              transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease',
+              transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, background 200ms ease',
               flexShrink: 0,
+              opacity: limitReached ? 0.5 : 1,
             }}
-            onTouchStart={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px) scale(0.93)'; }}
+            onTouchStart={e => { if (!limitReached) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px) scale(0.93)'; }}
             onTouchEnd={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px)'; }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -468,12 +496,73 @@ function MobileLayout({ pattern, allPatterns, layout, errors }: MobileLayoutProp
         })}
       </nav>
 
+      {/* Fullscreen 3D preview overlay */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 80,
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'rgba(30,24,18,0.92)',
+          backdropFilter: 'blur(8px)',
+          opacity: expanded3D ? 1 : 0,
+          pointerEvents: expanded3D ? 'auto' : 'none',
+          transition: 'opacity 280ms ease',
+        }}
+        onClick={() => setExpanded3D(false)}
+      >
+        {/* Header row */}
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '16px 20px',
+            paddingTop: 'calc(16px + env(safe-area-inset-top))',
+            flexShrink: 0,
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <span style={{
+            fontFamily: "'Apple Juice', cursive",
+            fontSize: 11, letterSpacing: '0.22em',
+            color: 'rgba(242,235,226,0.45)',
+          }}>
+            vista 3d
+          </span>
+          <button
+            onClick={() => setExpanded3D(false)}
+            style={{
+              background: 'rgba(242,235,226,0.1)', border: '1px solid rgba(242,235,226,0.18)',
+              borderRadius: 4, width: 32, height: 32,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(242,235,226,0.7)', cursor: 'pointer',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <line x1="1" y1="1" x2="11" y2="11" />
+              <line x1="11" y1="1" x2="1" y2="11" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 3D canvas */}
+        <div
+          style={{ flex: 1, minHeight: 0, padding: '0 12px', paddingBottom: 'calc(24px + env(safe-area-inset-bottom))', transform: expanded3D ? 'scale(1)' : 'scale(0.92)', transition: 'transform 320ms cubic-bezier(0.34,1.56,0.64,1)' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ height: '100%', borderRadius: 8, overflow: 'hidden' }}>
+            {expanded3D && <Preview3D />}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
 
 export default function App() {
   const { pattern, allPatterns, layout, errors } = usePattern();
+  const { state } = useAppState();
   const { t } = useTranslation();
   const [slots, setSlots] = useState<number[]>(pickRandomSlots);
   const ref3D = useRef<HTMLDivElement>(null);
@@ -526,9 +615,11 @@ export default function App() {
     };
   }, [updateStripHeight, isMobile]);
 
+  // Only rotate a strip image when the user switches pieces or changes shape type — not on every input keystroke
+  const activeShape = state.stack.find(i => i.id === state.activeStackId)?.shape;
+  const patternKey = `${state.activeStackId}-${activeShape}`;
   useEffect(() => {
     if (!pattern) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlots(prev => {
       const available = POOL.map((_, i) => i).filter(i => !prev.includes(i));
       if (available.length === 0) return prev;
@@ -538,7 +629,8 @@ export default function App() {
       next[slotIdx] = poolIdx;
       return next;
     });
-  }, [pattern]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patternKey]);
 
   if (isMobile) return <MobileLayout pattern={pattern} allPatterns={allPatterns} layout={layout} errors={errors} />;
 
